@@ -1,0 +1,98 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{{ page_title }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4"
+            crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="container-fluid m-4">
+        <div class="row justify-content-center">
+            <div class="col-6">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="card__header d-flex flex-row align-items-center border-bottom border-gray pb-2">
+                            <span class="material-icons-round" style="font-size: 32px">tune</span>
+                            <h3 class="ms-2 mb-0">Установка</h3>
+                        </div>
+                        <div class="card__form mt-2">
+                            <form action="/install/" method="POST">
+                                <div class="form__header d-flex flex-row mb-2">
+                                    <span class="material-icons-round">manage_accounts</span>
+                                    <h5 class="card-title ms-2">Создание администратора</h5>
+                                </div>
+                                {% if errors and errors|length > 0 %}
+                                <div>
+                                    {% for error in errors %}
+                                    <div class="card border border-danger bg-light mb-3">
+                                        <div class="card-body">
+                                            {{ error }}
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <div class="mb-3">
+                                    <label for="inputUsername" class="form-label">Имя пользователя</label>
+                                    <input type="text" name="username" class="form-control" id="inputUsername"
+                                           value="{{ data.username }}" aria-describedby="usernameHelp">
+                                    <div id="usernameHelp" class="form-text">
+                                        Имя пользователя должно быть длинной от 3 символов и состоять из латиницы и знака подчёркивания.
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="inputEmail" class="form-label">Адрес электронной почты</label>
+                                    <input type="text" name="email" class="form-control" id="inputEmail"
+                                           value="{{ data.email }}" aria-describedby="emailHelp">
+                                    <div id="emailHelp" class="form-text">
+                                        Адрес электронной почты будет привязан к аккаунту. Сброс пароля будет возможен только через эту почту.
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="inputFirstName" class="form-label">Имя</label>
+                                    <input type="text" name="first_name" class="form-control" id="inputFirstName"
+                                           value="{{ data.first_name }}">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="inputLastName" class="form-label">Фамилия</label>
+                                    <input type="text" name="last_name" class="form-control" id="inputLastName"
+                                           value="{{ data.last_name }}">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="inputAppPassword" class="form-label">APP_SETUP_PASSWORD</label>
+                                    <input type="text" name="app_password" class="form-control" id="inputAppPassword"
+                                           value="{{ data.app_password }}" aria-describedby="appPasswordHelp">
+                                    <div id="appPasswordHelp" class="form-text">
+                                        Данный параметр можно найти в выводе сервера в строке вида:
+                                        <code>
+                                            Generated APP_SETUP_PASSWORD = {APP_SETUP_PASSWORD}
+                                        </code>
+                                        <br/>
+                                        <a href="#dockerHelp" class="text-dark" data-bs-toggle="collapse" href="#dockerHelp" role="button" aria-expanded="false" aria-controls="dockerHelp">
+                                            Если сайт развёрнут через стандартный docker-compose
+                                        </a>
+                                        <div class="collapse" id="dockerHelp">
+                                            <div class="card card-body">
+                                                <p>Выполните следующую команду в терминале:</p>
+                                                <code class="user-select-all">sudo docker exec -it supportbot_backend grep 'APP_SETUP_PASSWORD' /var/log/gunicorn-error.log | tail -n 1</code>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary">Сохранить</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

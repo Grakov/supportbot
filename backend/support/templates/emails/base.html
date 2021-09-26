@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+    	body {
+        	padding: 2em;
+            margin: auto;
+            max-width: 720px;
+            min-width: 320px;
+            box-sizing: border-box;
+            background-color: #fafafa;
+            font-family: sans-serif;
+        }
+        h1, h2, h3, h4 {
+        	margin: 0;
+        	border-bottom: 1px solid #ddd;
+            padding-bottom: 0.5em;
+        }
+        .container {
+            padding: 2em;
+            margin-bottom: 1em;
+            border: 1px solid #ededed;
+            border-radius: 0.5em;
+            box-shadow: 1px 1px 10px #ddd;
+            background-color: white;
+        }
+        .footer {
+            color: #aaa;
+            font-size: small;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+	<div class="container">
+    	<h2>{% block title %}{% endblock %}</h2>
+        {% block content %}{% endblock %}
+    </div>
+    <div class="footer">
+        @supportbot
+    </div>
+</body>
+</html>

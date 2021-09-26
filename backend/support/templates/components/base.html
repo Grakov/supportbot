@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{% block head_title %}{{ page_title }}{% endblock %}</title>
+    {% block head_css %}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+    {% endblock %}
+    {% block head_js %}
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"
+            integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+            crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4"
+            crossorigin="anonymous"></script>
+    <script src="/static/js/script.js"></script>
+    {% endblock %}
+    <script>
+        if (typeof support === 'undefined') {
+            console.log('Something went wrong: check support var');
+        }
+
+        support.vars.append({
+            csrf_token: '{{ csrf_token }}',
+            current_chats: null,
+            {% block js_definitions %}{% endblock %}
+        });
+    </script>
+</head>
+<body>
+    {% block body_header %}
+        {% include 'components/header.html' %}
+    {% endblock %}
+    {% block content %}{% endblock %}
+    {% include 'components/footer.html' %}
+    <div class="toast-container position-absolute p-3 top-0 end-0">
+    </div>
+    <script>
+    {% if errors and errors|length > 0 %}
+        {% for error in errors %}
+            support.makeErrorToast({
+                text: "{{ error.text }}",
+                small_text: {% if error.description %}"{{ error.description }}"{% else %}null{% endif %},
+            });
+        {% endfor %}
+    {% endif %}
+
+    {% if staff_user %}
+    window.setInterval(support.update, 5000);
+    support.updateChatsBadge();
+    {% endif %}
+    </script>
+</body>
+</html>

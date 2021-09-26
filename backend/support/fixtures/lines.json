@@ -1,0 +1,18 @@
+[
+    {
+        "model": "support.lines",
+        "pk": 1,
+        "fields": {
+            "name": "Первая линия",
+            "description": "Основная очередь обращений"
+        }
+    },
+    {
+        "model": "support.lines",
+        "pk": 2,
+        "fields": {
+            "name": "Вторая линия",
+            "description": "Обращения, требующие длительной обработки"
+        }
+    }
+]

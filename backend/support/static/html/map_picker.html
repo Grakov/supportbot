@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Map</title>
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.css' rel='stylesheet' />
+
+    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"></script>
+    <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css" type="text/css">
+    <!-- Promise polyfill script is required -->
+    <!-- to use Mapbox GL Geocoder in IE 11. -->
+    <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.auto.min.js"></script>
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: sans-serif;
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+        #error {
+            width: 100%;
+            height: 100%;
+            align-items: center;
+            justify-content: center;
+            background-color: #ffeeee;
+            margin-left: auto;
+            margin-right: auto;
+            display: none;
+        }
+        #error-message {
+            padding: 1.5em;
+            margin: 1.5em;
+            border: 0.25em solid #ffaaaa;
+            border-radius: 1em;
+            text-align: center;
+        }
+        #error a {
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <div id='map'></div>
+    <div id='error'>
+        <div id='error-message'>
+            No MapBox API Token passed. Use <a href="https://github.com/Grakov/supportbot/#location-picker-support" target="_blank">the following instruction</a> to fix this problem.<br/><br/>
+            If API Token was set correctly, try to reload this page.
+        </div>
+    </div>
+    <input type="hidden" id="loc_lat" />
+    <input type="hidden" id="loc_lon" />
+    <input type="hidden" id="loc_title" />
+    <input type="hidden" id="loc_address" />
+    <script>
+        /*
+            Probably it's better to use Window.postMessage instead of storing values on <input> and accessing them from
+            parent page (especially when parent page and this page are crossdomain)
+        */
+        let storage = {
+            is_inited: false,
+            DOM: {
+                latitude: document.getElementById('loc_lat'),
+                longitude: document.getElementById('loc_lon'),
+                title: document.getElementById('loc_title'),
+                address: document.getElementById('loc_address'),
+            },
+            values: {
+                latitude: null,
+                longitude: null,
+                title: null,
+                address: null,
+                map: null,
+                marker: null,
+            },
+            init: function() {
+                if (storage.is_inited) return;
+
+                storage.is_inited = true;
+
+                mapboxgl.accessToken = window.localStorage.getItem('mapbox_api_token');
+                if ([null, undefined, ''].indexOf(mapboxgl.accessToken) != -1) {
+                    document.getElementById('error').style.display = 'flex';
+                    document.getElementById('map').style.display = 'none';
+                    return;
+                }
+
+                storage.values.map = new mapboxgl.Map({
+                    container: 'map',
+                    style: 'mapbox://styles/mapbox/streets-v11', // style URL
+                    center: [0, 0],
+                    zoom: 8
+                });
+
+                storage.values.map.addControl(
+                    new MapboxGeocoder({
+                        accessToken: mapboxgl.accessToken,
+                        mapboxgl: mapboxgl,
+                        marker: false,
+                        flyTo: {
+                            animate: false,
+                        },
+                    }).on('result', (result) => {
+                        title = result.result.text;
+                        if (title === undefined) title = null;
+
+                        address = result.result.properties.address;
+                        if (address === undefined) address = null;
+                        storage.onChange(title, address);
+                    }),
+                    'top-right'
+                );
+
+                storage.values.map.addControl(
+                    new mapboxgl.NavigationControl({
+                        showCompass: false,
+                    }),
+                    'top-right'
+                );
+
+                storage.values.map.addControl(
+                    new mapboxgl.GeolocateControl({
+                        positionOptions: {
+                            enableHighAccuracy: true
+                        },
+                        trackUserLocation: false
+                    }),
+                    position='top-right'
+                );
+
+                storage.values.marker = new mapboxgl.Marker({
+                    draggable: false,
+                    anchor: 'center',
+                }).setLngLat(storage.values.map.getCenter()).addTo(storage.values.map);
+                storage.moveMarker();
+
+                storage.values.map.on('move', () => {
+                    storage.moveMarker();
+                }).on('moveend', () => {
+                    storage.onChange();
+                });
+
+                storage.getLocation();
+            },
+            getLocation: function() {
+                if ("geolocation" in navigator) {
+                    navigator.geolocation.getCurrentPosition(position => {
+                        storage.values.map.setCenter([position.coords.longitude, position.coords.latitude]);
+                        storage.values.map.setZoom(12);
+                        storage.onChange();
+                    });
+                } else {
+                    alert('Геолокация недоступна :(');
+                }
+            },
+            moveMarker: function(location=null) {
+                if (location === null) {
+                    location = storage.values.map.getCenter();
+                }
+                storage.values.marker.setLngLat(location);
+            },
+            syncData: function() {
+                current_location = storage.values.map.getCenter();
+                storage.moveMarker(current_location);
+                storage.values.latitude = current_location.lat;
+                storage.values.longitude = current_location.lng;
+                storage.saveBaseData();
+            },
+            onChange: function(title=null, address=null) {
+                storage.syncData();
+
+                storage.values.title = title;
+                storage.values.address = address;
+                storage.saveMetaData();
+            },
+            saveBaseData: function() {
+                relations = [
+                    [storage.DOM.latitude, storage.values.latitude],
+                    [storage.DOM.longitude, storage.values.longitude],
+                ];
+                storage.saveData(relations);
+            },
+            saveMetaData: function() {
+                relations = [
+                    [storage.DOM.title, storage.values.title],
+                    [storage.DOM.address, storage.values.address],
+                ];
+                storage.saveData(relations);
+            },
+            saveData: function(relations) {
+                relations.forEach((relation) => {
+                    relation[0].value = relation[1];
+                });
+            }
+        };
+        if (typeof(IntersectionObserver) === 'function' && window.frameElement !== null) {
+            let observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach((element) => {
+                    if (element.isIntersecting) {
+                        storage.init();
+                    }
+                });
+            }, {
+                root: null,
+                rootMargin: '0px',
+                threshold: 1.0
+            });
+
+            observer.observe(window.frameElement);
+        } else {
+            storage.init();
+        }
+    </script>
+</body>
+</html>

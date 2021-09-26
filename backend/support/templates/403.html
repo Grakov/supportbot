@@ -1,0 +1,55 @@
+{% extends "components/base.html" %}
+
+{% comment %}
+Component receives chat map:
+- assigned_chats - array of maps
+--- chat - Chats model object
+--- last_message - string with last message (truncated)
+--- time - string
+--- new_messages - integer
+- current_chat - int
+- chats_limit - int
+- messages - array with Messages model objects
+{% endcomment %}
+
+{% block head_css %}
+    {{ block.super }}
+        <link href="/static/css/chat.css" rel="stylesheet">
+{% endblock %}
+
+{% block head_js %}
+    {{ block.super }}
+{% endblock %}
+
+{% block js_definitions %}
+            current_staff: {% if staff_user %}{{ staff_user.id }}{% else %}null{% endif %},
+            current_chat: {
+                id: {% if chat.current_chat %}{{ chat.current_chat.id }}{% else %}null{% endif %},
+                assignee: {% if chat.current_chat.assigned %}{{ chat.current_chat.assigned.id }}{% else %}null{% endif %},
+                status: {% if chat.current_chat.status %}"{{ chat.current_chat.status }}"{% else %}null{% endif %},
+                level: {% if chat.current_chat.level %}{{ chat.current_chat.level }}{% else %}null{% endif %},
+                last_action: {% if chat.current_chat.last_action %}{{ chat.current_chat.last_action.timestamp|floatformat:0 }}{% else %}null{% endif %},
+            },
+            current_client: {% if chat.current_chat %}{{ chat.current_chat.client.id }}{% else %}null{% endif %},
+            is_client_blocked: {% if chat.current_chat.client.is_blocked %}true{% else %}false{% endif %},
+{% endblock %}
+
+{% block content %}
+        <div class="container-fluid">
+            <div class="row justify-content-center m-4">
+                <div class="col-6">
+                    <div class="card">
+                        <div class="card-body d-flex flex-column justify-content-between">
+                            <div class="d-flex flex-row mt-2">
+                                <span class="material-icons-round">block</span>
+                                <h5 class="card-title ms-2">Ошибка доступа</h5>
+                            </div>
+                            <div class="mt-1">
+                                Для просмотра страницы недостаточно прав
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+{% endblock %}

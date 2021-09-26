@@ -1,0 +1,162 @@
+{% extends "components/base.html" %}
+
+{% block head_css %}
+    {{ block.super }}
+{% endblock %}
+
+{% block head_js %}
+    {{ block.super }}
+{% endblock %}
+
+{% block content %}
+        <div class="container-fluid">
+            <div class="row justify-content-center m-4">
+                <div class="col-6">
+                    <div class="users-container card">
+                        <div class="card-body d-flex flex-row justify-content-between">
+                            <div class="d-flex flex-row mt-2">
+                                <span class="material-icons-round">people</span>
+                                <h5 class="card-title ms-2">Сотрудники</h5>
+                            </div>
+                            <div class="user-action">
+                                <button type="button" class="user-action__create btn btn-secondary">Создать</button>
+                            </div>
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            {% for staff_user in users.list %}
+                                <div class="user-entity list-group-item list-group-item-action selectable d-flex flex-row align-items-center"
+                                     data-staff-id="{{ staff_user.id }}">
+                                    <div class="user-entity__media">
+                                        <img class="user-entity__avatar" src="{{ staff_user.meta.avatar.generate_file_url }}"/>
+                                    </div>
+                                    <div class="user-entity__name-container d-flex flex-column">
+                                        <div class="user-entity__name ms-2 mb-0 h5">
+                                            {% if not staff_user.is_active %}
+                                                <del>{% firstof staff_user.first_name %} {% firstof staff_user.last_name %}</del>
+                                            {% else %}
+                                                {% firstof staff_user.first_name %} {% firstof staff_user.last_name %}
+                                            {% endif %}
+                                        </div>
+                                        <div class="user-entity__username mt-1 ms-2 mb-0 small">
+                                            @{{ staff_user.username }}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                            {% if users.list|length == 0 %}
+                                <div class="list-group-item text-center py-3">
+                                    <i>Нет содержимого</i>
+                                </div>
+                            {% endif %}
+                        </ul>
+                        {% include "components/pagination.html" with pagination=pagination only %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="user-edit-modal modal fade" id="userEditModal" tabindex="-1" aria-hidden="true">
+            <div class="user-edit-modal__popup modal-dialog modal-dialog-centered modal-dialog-scrollable ">
+                <div class="user-edit-modal__content modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Редактирование пользователя</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form class="user-edit">
+                            <div class="input-group mb-3">
+                                <span class="input-group-text material-icons-round" id="name-addon">badge</span>
+                                <input type="text" name="first_name" id="editFirstName" class="form-control" placeholder="Имя" aria-label="Имя" aria-describedby="name-addon">
+                                <input type="text" name="last_name" id="editLastName" class="form-control" placeholder="Фамилия" aria-label="Фамилия">
+                            </div>
+                            <div class="input-group mb-3">
+                                <span class="input-group-text material-icons-round" id="username-addon">alternate_email</span>
+                                <input type="text" name="username" id="editUsername" class="form-control" placeholder="Имя пользователя" aria-label="Имя пользователя" aria-describedby="username-addon">
+                            </div>
+                            <div class="input-group mb-3">
+                                <span class="input-group-text material-icons-round" id="email-addon">email</span>
+                                <input type="text" name="email" id="editEmail" class="form-control" placeholder="Email" aria-label="Email" aria-describedby="email-addon">
+                            </div>
+                            <div class="d-flex flex-row">
+                                <button type="button" id="editBlock" class="btn btn-outline-danger">
+                                    Заблокировать
+                                </button>
+                                <button type="button" id="editUnblock" class="btn btn-outline-danger">
+                                    Разблокировать
+                                </button>
+                                <button type="button" id="editResetPassword" class="btn btn-outline-secondary ms-2">
+                                    Сбросить пароль
+                                </button>
+                            </div>
+                        </form>
+                        <input name="id" id="editId" type="hidden" value="" />
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="user-edit-modal__save btn btn-outline-primary">Сохранить</button>
+                        <button type="button" class="user-edit-modal__close btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="user-create-modal modal fade" id="userCreateModal" tabindex="-1" aria-hidden="true">
+            <div class="user-create-modal__popup modal-dialog modal-dialog-centered modal-dialog-scrollable ">
+                <div class="user-create-modal__content modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Создание пользователя</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form class="user-create">
+                            <div class="input-group mb-3">
+                                <span class="input-group-text material-icons-round" id="create-name-addon">badge</span>
+                                <input type="text" name="first_name" id="createFirstName" class="form-control" placeholder="Имя" aria-label="Имя" aria-describedby="create-name-addon">
+                                <input type="text" name="last_name" id="createLastName" class="form-control" placeholder="Фамилия" aria-label="Фамилия">
+                            </div>
+                            <div class="input-group mb-3">
+                                <span class="input-group-text material-icons-round" id="create-username-addon">alternate_email</span>
+                                <input type="text" name="username" id="createUsername" class="form-control" placeholder="Имя пользователя" aria-label="Имя пользователя" aria-describedby="create-username-addon">
+                            </div>
+                            <div class="input-group mb-3">
+                                <span class="input-group-text material-icons-round" id="create-email-addon">email</span>
+                                <input type="text" name="email" id="createEmail" class="form-control" placeholder="Email" aria-label="Email" aria-describedby="create-email-addon">
+                            </div>
+                            <div class="dynamic-fields">
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="user-create-modal__save btn btn-outline-primary">Создать</button>
+                        <button type="button" class="user-create-modal__close btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            $('.user-entity').on('click', (event) => {
+                let user_id = $( event.currentTarget ).attr('data-staff-id');
+                support.staff.loadEditModal(user_id);
+            });
+            $('.user-edit-modal__save').on('click', (event) => {
+                support.staff.saveUser();
+            });
+            $('#editBlock').on('click', (event) => {
+                support.staff.blockUser('block');
+            });
+            $('#editUnblock').on('click', (event) => {
+                support.staff.blockUser('unblock');
+            });
+            $('#editResetPassword').on('click', (event) => {
+                support.staff.resetPassword();
+            });
+            $('.user-action__create').on('click', (event) => {
+                support.staff.loadCreateModal();
+            });
+            $('.user-create-modal__save').on('click', (event) => {
+                support.staff.createUser();
+            });
+        </script>
+        {% if users.edit %}
+        <script>
+            support.staff.loadEditModal({{ users.edit }});
+        </script>
+        {% endif %}
+{% endblock %}

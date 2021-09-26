@@ -1,0 +1,68 @@
+{% extends "components/base.html" %}
+
+{% block head_css %}
+    {{ block.super }}
+{% endblock %}
+
+{% block head_js %}
+    {{ block.super }}
+{% endblock %}
+
+{% block content %}
+        <div class="container-fluid">
+            <div class="row justify-content-center m-4">
+                <div class="col-6">
+                    <div class="users-container card">
+                        <div class="card-body d-flex flex-row justify-content-between">
+                            <div class="d-flex flex-row mt-2">
+                                <span class="material-icons-round">people</span>
+                                <h5 class="card-title ms-2">Пользователи</h5>
+                            </div>
+                            <div class="user-action">
+                                <form>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control border-secondary" placeholder="Username/ID"
+                                               aria-label="Search" aria-describedby="search-addon">
+                                        <button class="btn btn-outline-secondary pb-0" type="button" id="search-addon">
+                                            <span class="material-icons-round">search</span>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            {% for user in users.list %}
+                            <a class="user-entity list-group-item list-group-item-action selectable d-flex flex-row align-items-center"
+                            href="/users/{{ user.id }}">
+                                <div class="user-entity__media">
+                                    <img class="user-entity__avatar" src="{{ user.avatar.generate_file_url }}"/>
+                                </div>
+                                <div class="user-entity__name-container d-flex flex-column">
+                                    <div class="user-entity__name ms-2 mb-0 h5">
+                                        {% if user.is_blocked %}<del>{% endif %}
+                                        {% if user.first_name %}
+                                            {{ user.first_name }}&nbsp;{% firstof user.last_name %}
+                                        {% else %}
+                                            <i>Empty name</i>
+                                        {% endif %}
+                                        {% if user.is_blocked %}</del>{% endif %}
+                                    </div>
+                                    <div class="user-entity__username mt-1 ms-2 mb-0 small">
+                                        {% if user.username %}@{{ user.username }}{% endif %}
+                                        ({{ user.source|capfirst }} ID {{ user.uid }})
+                                    </div>
+                                </div>
+                            </a>
+                            {% endfor %}
+                            {% if users.list|length == 0 %}
+                                <a class="list-group-item text-center py-3">
+                                    <i>Нет содержимого</i>
+                                </a>
+                            {% endif %}
+                        </ul>
+                        {% include "components/pagination.html" with pagination=pagination only %}
+                    </div>
+                </div>
+            </div>
+        </div>
+{% endblock %}

@@ -1,0 +1,26 @@
+server {
+    listen 80 default_server;
+    # listen [::]:80 default_server;
+
+    # assuming, what access logs will be available on docker's host
+    access_log off;
+
+    root /var/www/supportbot;
+
+    index index.html index.htm;
+
+    server_name _;
+
+    location ^~ /static/ {
+        try_files $uri $uri/ =404;
+    }
+
+    location / {
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header Host $http_host;
+        proxy_pass http://backend;
+    }
+}
+

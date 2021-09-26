@@ -1,0 +1,3 @@
+{% for chat_card in assigned_chats %}
+    {% include "components/left_chat_card.html" with chat_card=chat_card current_chat=current_chat only %}
+{% endfor %}

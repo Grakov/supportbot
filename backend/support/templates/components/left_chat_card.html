@@ -1,0 +1,41 @@
+{% comment %}
+Component receives chat_card map:
+- chat - Chats model object
+- last_message - string with last message (truncated)
+- time - string
+- new_messages - integer
+And current_chat - Chats model object
+{% endcomment %}
+
+<div class="message-box d-flex list-group-item list-group-item-action {% if current_chat.id == chat_card.chat.id %}bg-light {% endif %}p-0"
+    data-chat-id="{{ chat_card.chat.id }}" data-current-chat-class="bg-light">
+    <div class="message-box__container m-2 d-flex flex-row">
+        <div class="message-box__media">
+            <img class="message-box__user-avatar" src="{{ chat_card.chat.client.avatar.generate_file_url }}"/>
+        </div>
+        <div class="message-box__data d-flex flex-column w-100 ms-2">
+            <div class="message-box__header d-flex flex-row justify-content-between">
+                <div class="message-box__username fw-bolder">
+                    {{ chat_card.chat.client.get_name }}
+                </div>
+                <div class="message-box__time text-secondary">
+                    {{ chat_card.get_last_action_str }}
+                </div>
+            </div>
+            <div class="message-box__message-hack">
+                <div class="message-box__message-data {% if chat_card.last_message.staff %}message-box__message-staff{% else %}message-box__message-client{% endif %}
+                            d-flex flex-row justify-content-between overflow-hidden"
+                     data-staff-class="message-box__message-staff" data-client-class="message-box__message-client">
+                    <div class="message-box__message-text text-secondary text-nowrap overflow-hidden px-1 sme-2">
+                        {% if chat_card.last_message.text %}
+                            {{ chat_card.last_message.text|truncatechars:128 }}
+                        {% else %}
+                            <span class="material-icons-round text-inherit-font-size">attach_file</span> <i>Вложение</i>
+                        {% endif %}
+                    </div>
+                    <span class="message-box__message-badge badge bg-danger d-flex align-items-center ms-1 d-none"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

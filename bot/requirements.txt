@@ -1,0 +1,7 @@
+pyTelegramBotAPI==3.7.*
+pika==1.2.*
+pika-stubs==0.1.*
+python-dotenv==0.17.*
+PyMySQL==1.0.*
+SQLAlchemy==1.4.*
+cryptography==3.4.*

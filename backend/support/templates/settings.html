@@ -1,0 +1,161 @@
+{% extends "components/base.html" %}
+
+{% block head_css %}
+    {{ block.super }}
+{% endblock %}
+
+{% block head_js %}
+    {{ block.super }}
+{% endblock %}
+
+{% block content %}
+        <div class="container-fluid">
+            <div class="row justify-content-center m-4">
+                <div class="col-6">
+                    <div class="queue-container card">
+                        <div class="card-body d-flex flex-row justify-content-between">
+                            <div class="d-flex flex-row mt-2">
+                                <span class="material-icons-round">settings</span>
+                                <h5 class="card-title ms-2">Настройки</h5>
+                            </div>
+                            <div class="settings-action">
+                                <div class="input-group">
+                                    <button class="settings-action__create btn btn-outline-secondary d-flex align-items-center"
+                                            type="button">
+                                        <span class="material-icons-round">add_box</span>
+                                    </button>
+                                    <input type="text" class="form-control border-secondary" placeholder="Setting name"
+                                           aria-label="Search" aria-describedby="search-addon">
+                                    <button class="btn btn-outline-secondary pb-0" type="button">
+                                        <span class="material-icons-round">search</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <ul class="queue-list list-group list-group-flush">
+                            {% for setting in settings %}
+                            <li class="setting-entity list-group-item list-group-item-action selectable d-flex flex-row justify-content-between align-items-center">
+                                <div class="setting-entity__container d-flex flex-row flex-grow-1 align-items-center w-100 overflow-hidden"
+                                     data-setting-id="{{ setting.id }}">
+                                    <div class="setting-entity__checkbox d-flex flex-shrink-0 justify-content-center mx-2">
+                                        {% if setting.is_system %}
+                                        <span class="material-icons-round small text-secondary" title="Системный параметр">shield</span>
+                                        {% else %}
+                                        <input class="form-check-input" type="checkbox" value="{{ setting.id }}">
+                                        {% endif %}
+                                    </div>
+                                    <div class="row m-0 p-0 w-100">
+                                        <div class="setting-entity__settings flex-grow-1 w-100 row me-2 ms-2">
+                                            <div class="setting-entity__name col-5 overflow-hidden text-truncate text-nowrap">
+                                                {{ setting.key }}
+                                            </div>
+                                            <div class="setting-entity__value col-5 overflow-hidden text-truncate text-nowrap">
+                                                {{ setting.get_value }}
+                                            </div>
+                                            <div class="setting-entity__type col-2 overflow-hidden text-truncate text-nowrap">
+                                                {{ setting.type }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="setting-entity__buttons d-flex flex-row mx-2">
+                                    <button class="setting-entity__button-edit btn btn-sm btn-outline-secondary pb-0 me-2" type="button"
+                                            data-setting-id="{{ setting.id }}" title="Редактировать">
+                                        <span class="material-icons-round">edit</span>
+                                    </button>
+                                    <button class="setting-entity__button-delete btn btn-sm btn-outline-danger pb-0" type="button"
+                                            data-setting-id="{{ setting.id }}" title="Удалить"{% if setting.is_system %} disabled{% endif %}>
+                                        <span class="material-icons-round">delete_outline</span>
+                                    </button>
+                                </div>
+                            </li>
+                            {% endfor %}
+                            {% if settings|length == 0 %}
+                                <li class="list-group-item text-center py-3">
+                                    <i>Нет содержимого</i>
+                                </li>
+                            {% endif %}
+                        </ul>
+                        {% include "components/pagination.html" with pagination=pagination only %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="setting-edit-modal modal fade" id="settingEditModal" tabindex="-1" aria-hidden="true">
+            <div class="setting-edit-modal__popup modal-dialog modal-dialog-centered modal-dialog-scrollable ">
+                <div class="setting-edit-modal__content modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Редактирование</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="setting-edit-modal__body modal-body overflow-hidden m-3 p-0">
+                        <form id="settingEditForm">
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="setting-edit-modal__save btn btn-secondary">Сохранить</button>
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="setting-create-modal modal fade" id="settingCreateModal" tabindex="-1" aria-hidden="true">
+            <div class="setting-create-modal__popup modal-dialog modal-dialog-centered modal-dialog-scrollable ">
+                <div class="setting-create-modal__content modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Добавить параметр</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="setting-create-modal__body modal-body overflow-hidden m-3 p-0">
+                        <form id="settingCreateForm">
+                            <div class="setting-create-modal__form-base"></div>
+                            <div class="setting-create-modal__form-value"></div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="setting-create-modal__save btn btn-secondary">Сохранить</button>
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="setting-delete-modal modal fade" id="settingDeleteModal" tabindex="-1" aria-hidden="true">
+            <div class="setting-delete-modal__popup modal-dialog modal-dialog-centered modal-dialog-scrollable ">
+                <div class="setting-delete-modal__content modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Удаление</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="setting-delete-modal__body modal-body overflow-hidden m-3 p-0">
+                        Вы действительно хотите удалить параметр <b id="settingDeleteKey"></b>?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="setting-delete-modal__delete btn btn-danger">Удалить</button>
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            $('.setting-entity__button-edit').on('click', (event) => {
+                setting_id = $( event.target ).data('setting-id');
+                support.settings.loadEditModal(setting_id);
+            });
+            $('.setting-entity__button-delete').on('click', (event) => {
+                setting_id = $( event.target ).data('setting-id');
+                support.settings.loadDeleteModal(setting_id);
+            });
+            $('.setting-edit-modal__save').on('click', (event) => {
+                support.settings.saveSetting();
+            });
+            $('.setting-delete-modal__delete').on('click', (event) => {
+                support.settings.deleteSetting();
+            });
+            $('.settings-action__create').on('click', (event) => {
+                support.settings.showCreateModal();
+            });
+            $('.setting-create-modal__save').on('click', (event) => {
+                support.settings.createSetting();
+            });
+        </script>
+{% endblock %}

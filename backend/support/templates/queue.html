@@ -1,0 +1,122 @@
+{% extends "components/base.html" %}
+
+{% block head_css %}
+    {{ block.super }}
+{% endblock %}
+
+{% block head_js %}
+    {{ block.super }}
+{% endblock %}
+
+{% block content %}
+        <div class="container-fluid">
+            <div class="row justify-content-center m-4">
+                <div class="col-6">
+                    <div class="queue-container card">
+                        <div class="card-body d-flex flex-row justify-content-between">
+                            <div class="d-flex flex-row mt-2">
+                                <span class="material-icons-round">all_inbox</span>
+                                <h5 class="card-title ms-2">Очередь</h5>
+                            </div>
+                            <div class="queue-action">
+                                <form>
+                                    <div class="input-group">
+                                        <button class="queue-action__assign btn btn-outline-secondary pb-0" type="button" id="queue-assign" title="Взять тикет">
+                                            <span class="material-icons-round">add_box</span>
+                                        </button>
+                                        <button class="queue-action__refresh btn btn-outline-secondary pb-0" type="button" id="queue-refresh" title="Обновить список">
+                                            <span class="material-icons-round">refresh</span>
+                                        </button>
+                                        <select class="queue-action__select_line form-select border-secondary" aria-label="Линия поддержки"
+                                                data-current-line="{{ lines.current.id }}">
+                                            {% for line in lines.list %}
+                                                <option value="{{ line.id }}"{% if line.id == lines.current.id %}selected{% endif %}>
+                                                    {{ line.name }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <ul class="queue-list list-group list-group-flush">
+                            {% for ticket in queue %}
+                            <a class="queue-entity list-group-item list-group-item-action selectable d-flex flex-row justify-content-between align-items-center"
+                            href="/chat/{{ ticket.chat.id }}">
+                                <div class="queue-entity__container d-flex flex-row flex-grow-1 w-100 overflow-hidden">
+                                    <div class="queue-entity__media d-flex align-items-center">
+                                        <img class="queue-entity__avatar" src="{{ ticket.chat.client.avatar.generate_file_url }}"/>
+                                    </div>
+                                    <div class="queue-entity__base-info ms-2 mb-0 d-flex flex-column">
+                                        <div class="queue-entity__name-container d-flex flex-row align-items-center">
+                                            <div class="queue-entity__name h5 mb-0">
+                                                {% if ticket.chat.client.first_name %}
+                                                    {{ ticket.chat.client.first_name }}&nbsp;{% firstof ticket.chat.client.last_name %}
+                                                {% else %}
+                                                    <i>Empty name</i>
+                                                {% endif %}
+                                            </div>
+                                            <div class="queue-entity__username small">
+                                                {% if ticket.chat.client.username %}
+                                                    @{{ ticket.chat.client.username }}
+                                                {% else %}
+                                                    {{ ticket.chat.client.source|capfirst }} ID {{ ticket.chat.client.uid }}
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="queue-entity__message d-inline-block mt-1 p-1 ps-2 pe-2 bg-light text-nowrap small">
+                                            {% if ticket.last_message.text %}
+                                                {{ ticket.last_message.text|truncatechars:128 }}
+                                            {% else %}
+                                                <span class="material-icons-round text-inherit-font-size">attach_file</span> <i>Вложение</i>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="queue-entity__right ms-2 flex-shrink-0 d-flex flex-column">
+                                    <div class="queue-entity__right-timer timer-{{ ticket.timer_status }}">
+                                        {{ ticket.timer }}
+                                    </div>
+                                    <div class="queue-entity__right-buttons mt-2 d-flex justify-content-end">
+                                        <button class="queue-entity__button queue-entity__button-assign btn btn-outline-secondary btn-sm" data-chat-id="{{ ticket.chat.id }}">
+                                            <span class="material-icons-round small d-flex flex-self-align-center">
+                                                add
+                                            </span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </a>
+                            {% endfor %}
+                            {% if queue|length == 0 %}
+                                <a class="list-group-item text-center py-3">
+                                    <i>Нет содержимого</i>
+                                </a>
+                            {% endif %}
+                        </ul>
+                        {% include "components/pagination.html" with pagination=pagination only %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            $('.queue-action__assign').on('click', (event) => {
+                support.queue.auto_assign((chat_id, current_chats) => {
+                    location.href = support.config.urls.build(support.config.urls.chat.build_value, chat_id);
+                });
+            });
+            $('.queue-entity__button-assign').on('click', (event) => {
+                event.preventDefault();
+                chat_id = $( event.target ).data('chat-id');
+                support.queue.assign(chat_id, (chat_id, current_chats) => {
+                    location.href = support.config.urls.build(support.config.urls.chat.build_value, chat_id);
+                });
+            });
+            $('.queue-action__select_line').on('change', (event) => {
+                select = event.target;
+                current_line = $( select ).attr('data-current-line');
+                selected_line = select.options[select.selectedIndex].value;
+                if (current_line != selected_line)
+                    location.href = support.config.urls.build(support.config.urls.queue.build_value, selected_line);
+            });
+        </script>
+{% endblock %}

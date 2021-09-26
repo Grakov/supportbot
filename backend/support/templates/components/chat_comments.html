@@ -1,0 +1,13 @@
+{% for comment in comments.container %}
+    <li class="list-group-item">
+        <div class="text-dark">
+            {{ comment.text }}
+        </div>
+        <div class="text-secondary small">
+            {{ comment.timestamp|date:"SHORT_DATETIME_FORMAT" }}
+            <a href="/staff/{{ comment.author_id }}" class="text-reset text-decoration-none">
+                @{{ comment.username }}
+            </a>
+        </div>
+    </li>
+{% endfor %}

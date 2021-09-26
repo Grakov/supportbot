@@ -1,0 +1,6 @@
+{% for name_obj in names_container %}
+<li class="list-group-item">
+    {{ name_obj.name }}
+    <small class="text-secondary">{{ name_obj.timestamp|date:"Y/m/d"}} {{ name_obj.timestamp|time:"H:i" }}</small>
+</li>
+{% endfor %}

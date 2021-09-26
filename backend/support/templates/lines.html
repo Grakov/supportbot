@@ -1,0 +1,174 @@
+{% extends "components/base.html" %}
+
+{% block head_css %}
+    {{ block.super }}
+{% endblock %}
+
+{% block head_js %}
+    {{ block.super }}
+{% endblock %}
+
+{% block content %}
+        <div class="container-fluid">
+            <div class="row justify-content-center m-4">
+                <div class="col-6">
+                    <div class="lines-container card">
+                        <div class="card-body d-flex flex-row justify-content-between">
+                            <div class="d-flex flex-row mt-2">
+                                <span class="material-icons-round">view_list</span>
+                                <h5 class="card-title ms-2">Линии поддержки</h5>
+                            </div>
+                            <div class="lines-action">
+                                <form>
+                                    <div class="input-group">
+                                        <button class="lines-action__create btn btn-secondary" type="button">
+                                            Создать очередь
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <ul class="lines-list list-group list-group-flush">
+                            {% for line in lines.list %}
+                            <div class="lines-entity list-group-item list-group-item-action selectable d-flex flex-row justify-content-between align-items-center"
+                                 data-line-id="{{ line.id }}">
+                                <div class="lines-entity__container d-flex flex-row flex-grow-1 w-100 overflow-hidden">
+                                    <div class="lines-entity__info ms-2 mb-0 d-flex flex-column">
+                                        <div class="lines-entity__header d-flex flex-row align-items-center">
+                                            {% if line.is_system %}
+                                                <div class="lines-entity__badge me-1 material-icons-round" title="Системная очередь">
+                                                    verified
+                                                </div>
+                                            {% endif %}
+                                            <div class="lines-entity__name d-flex flex-row align-items-center mb-0 h5">
+                                                {{ line.name }}
+                                            </div>
+                                        </div>
+                                        <div class="lines-entity__description d-inline-block mt-1 text-secondary text-nowrap small">
+                                            {{ line.description }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="lines-entity__right ms-2 flex-shrink-0 d-flex flex-column">
+                                    <div class="lines-entity__right-buttons d-flex justify-content-end">
+                                        <button class="lines-entity__button lines-entity__button-edit btn btn-sm btn-outline-secondary pb-0 me-2" type="button"
+                                            data-line-id="{{ line.id }}" title="Редактировать">
+                                            <span class="material-icons-round">edit</span>
+                                        </button>
+                                        <button class="lines-entity__button lines-entity__button-delete btn btn-outline-danger btn-sm"
+                                                data-line-id="{{ line.id }}" title="Удалить"{% if line.is_system %} disabled{% endif %}>
+                                            <span class="material-icons-round small d-flex flex-self-align-center">
+                                                delete_outline
+                                            </span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% if lines|length == 0 %}
+                                <a class="list-group-item text-center py-3">
+                                    <i>Нет содержимого</i>
+                                </a>
+                            {% endif %}
+                        </ul>
+                        {% include "components/pagination.html" with pagination=pagination only %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="line-edit-modal modal fade" id="lineEditModal" tabindex="-1" aria-hidden="true">
+            <div class="line-edit-modal__popup modal-dialog modal-dialog-centered modal-dialog-scrollable ">
+                <div class="line-edit-modal__content modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Редактирование</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="line-edit-modal__body modal-body overflow-hidden m-3 p-0">
+                        <form class="line-edit">
+                            <div class="input-group mb-3">
+                                <span class="input-group-text material-icons-round" id="edit-name-addon">badge</span>
+                                <input type="text" name="name" id="editName" class="form-control" placeholder="Имя очереди" aria-label="Имя очереди" aria-describedby="edit-name-addon">
+                            </div>
+                            <div class="input-group mb-3">
+                                <span class="input-group-text material-icons-round" id="edit-description-addon">description</span>
+                                <input type="text" name="description" id="editDescription" class="form-control" placeholder="Описание" aria-label="Описание" aria-describedby="edit-description-addon">
+                            </div>
+                            <input type="hidden" name="id" class="line-id" value="" />
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="line-edit-modal__save btn btn-secondary">Сохранить</button>
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="line-create-modal modal fade" id="lineCreateModal" tabindex="-1" aria-hidden="true">
+            <div class="line-create-modal__popup modal-dialog modal-dialog-centered modal-dialog-scrollable ">
+                <div class="line-create-modal__content modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Добавить очередь</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="line-create-modal__body modal-body overflow-hidden m-3 p-0">
+                        <form id="lineCreateForm">
+                            <div class="input-group mb-3">
+                                <span class="input-group-text material-icons-round" id="create-name-addon">badge</span>
+                                <input type="text" name="name" id="createName" class="form-control" placeholder="Имя очереди" aria-label="Имя очереди" aria-describedby="create-name-addon">
+                            </div>
+                            <div class="input-group mb-3">
+                                <span class="input-group-text material-icons-round" id="create-description-addon">description</span>
+                                <input type="text" name="description" id="createDescription" class="form-control" placeholder="Описание" aria-label="Описание" aria-describedby="create-description-addon">
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="line-create-modal__save btn btn-secondary">Создать</button>
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="line-delete-modal modal fade" id="lineDeleteModal" tabindex="-1" aria-hidden="true">
+            <div class="line-delete-modal__popup modal-dialog modal-dialog-centered modal-dialog-scrollable ">
+                <div class="line-delete-modal__content modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Удаление</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="line-delete-modal__body modal-body overflow-hidden m-3 p-0">
+                        Вы действительно хотите удалить очередь <b id="lineDeleteName"></b>?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="line-delete-modal__delete btn btn-danger">Удалить</button>
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            $('.lines-entity__button-edit').on('click', (event) => {
+                line_id = $( event.target ).data('line-id');
+                support.lines.loadEditModal(line_id);
+            });
+            $('.line-edit-modal__save').on('click', (event) => {
+                support.lines.saveLine();
+            });
+
+            $('.lines-action__create').on('click', (event) => {
+                support.lines.loadCreateModal();
+            });
+            $('.line-create-modal__save').on('click', (event) => {
+                support.lines.createLine();
+            });
+
+            $('.lines-entity__button-delete').on('click', (event) => {
+                line_id = $( event.target ).data('line-id');
+                support.lines.loadDeleteModal(line_id);
+            });
+            $('.line-delete-modal__delete').on('click', (event) => {
+                line_id = $( event.target ).data('line-id');
+                support.lines.deleteLine(line_id);
+            });
+        </script>
+{% endblock %}

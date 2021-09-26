@@ -1,0 +1,166 @@
+{% comment %}
+Component receives message map:
+- client: client object
+- staff: staff object
+- is_service
+- time: string
+- attachments: custom class with array and function find_exception and field first_exception
+- text
+{% endcomment %}
+<!-- user message -->
+<div class="message mt-3" data-message-id="{{ message.id }}">
+    {% if message.is_service %}
+        {% for exception_attachment in message.attachments.find_exceptions %}
+            <div class="message__container d-flex flex-row justify-content-center w-100">
+                <div class="message__content d-flex flex-column">
+                    <div class="message__cloud border-bottom border-danger text-center p-1">
+                        <div class="message__text">
+                            {{ exception_attachment.exception.description }}
+                        </div>
+                    </div>
+                    <div class="message__service-data d-flex flex-row justify-content-between text-secondary small">
+                        <div class="message__sender me-2">
+                            {{ exception_attachment.exception.name }} | {{ message.client.source }}
+                        </div>
+                        <div class="message__date text-end">
+                            {{ message.time }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+        {% if message.text|linebreaksbr %}
+            <div class="message__container d-flex flex-row justify-content-center w-100">
+                <div class="message__content d-flex flex-column">
+                    <div class="message__cloud border-bottom border-secondary text-center p-1">
+                        <div class="message__text">
+                            {{ message.text }}
+                        </div>
+                    </div>
+                    <div class="message__service-data d-flex flex-row justify-content-between text-secondary small">
+                        <div class="message__sender me-2">
+                            {% if message.client %}
+                                {% if message.client.first_name %}
+                                    {{ message.client.first_name }}&nbsp;{% firstof message.client.last_name %}
+                                {% elif message.client.username %}
+                                    {{ message.client.username }}
+                                {% else %}
+                                    {{ message.client.source }} {{ message.client.uid }}
+                                {% endif %}
+                            {% else %}
+                                <a href="/staff/{{ message.staff.id }}" class="text-reset text-decoration-none">
+                                    @{{ message.staff.username }}
+                                </a>
+                            {% endif %}
+                        </div>
+                        <div class="message__date text-end">
+                            {{ message.time }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="message__container d-flex flex-row w-100">
+            <div class="message__media">
+                <img class="message__media-avatar" src="{% if message.client %}{{ message.client.avatar.generate_file_url }}{% else %}{{ message.staff.meta.avatar.generate_file_url }}{% endif %}"/>
+            </div>
+            <div class="message__content d-flex flex-column ms-3">
+                <div class="message__cloud {% if message.client %}message__client{% else %}message__staff{% endif %} p-3 rounded-2">
+                    {% if message.attachments|length > 0 %}
+                    <div class="message__attachments">
+                        {% for attachment in message.attachments.all %}
+                        <div class="message__attachment mb-3">
+                            {% if attachment.type == 'photo' %}
+                            <div class="message__attachment-image-container">
+                                <a class="message__attachment-image-link" href="{{ attachment.file.generate_file_url }}" target="_blank">
+                                    <img class="message__attachment-image" src="{{ attachment.file.generate_file_url }}" />
+                                </a>
+                            </div>
+                            {% elif attachment.type == 'video' %}
+                            <div class="message__attachment-video-container">
+                                <video class="message__attachment-video" src="{{ attachment.file.generate_file_url }}" preload="metadata"
+                                       {% if attachment.video.thumb.file %}poster="{{ attachment.video.thumb.file.generate_file_url }}"{% endif %}
+                                       controls></video>
+                            </div>
+                            {% elif attachment.type == 'document' %}
+                            <div class="message__attachment-document-container p-2 border border-2 border-light rounded">
+                                <a class="message_attachment-document-link text-decoration-none text-dark" href="{{ attachment.file.generate_file_url }}" target="_blank">
+                                    <div class="message_attachment-document-filename d-flex">
+                                        <span class="material-icons-round me-2">file_present</span> {{ attachment.document.file_name }}
+                                    </div>
+                                    <div class="message_attachment-document-size text-secondary">
+                                        {{ attachment.file.get_readable_size }} {{ attachment.document.mime_type }}
+                                    </div>
+                                </a>
+                            </div>
+                            {% elif attachment.type == 'location' %}
+                            <div class="message__attachment-location-container">
+                                <a class="message__attachment-location-link text-decoration-none" href="{{ attachment.location.map_url }}" target="_blank">
+                                    <div class="message__attachment_location_data d-flex flex-column">
+                                        <img class="message__attachment-location-tile" src="{{ attachment.location.tile_url }}" />
+                                        {% if attachment.location.title %}
+                                            <div class="text-dark mt-2 fw-bolder d-flex">
+                                                <span class="material-icons-round me-1">map</span> {{ attachment.location.title }}
+                                            </div>
+                                        {% endif %}
+                                        {% if attachment.location.address %}<div class="text-secondary">{{ attachment.location.address }}</div>{% endif %}
+                                    </div>
+                                </a>
+                                {% if not attachment.location.title and not attachment.location.address %}
+                                    <span class="text-secondary d-flex mt-1"><span class="material-icons-round me-1">place</span>{{ attachment.location.latitude }} {{ attachment.location.longitude }}</span>
+                                {% endif %}
+                            </div>
+                            {% elif attachment.type == 'contact' %}
+                            <div class="message__attachment-contact-container">
+                                <div class="message__attachment-contact-name d-flex">
+                                    <span class="material-icons-round me-2">contact_phone</span> &quot;{% if attachment.contact.first_name %}{{ attachment.contact.first_name }} {% endif %}
+                                    {% firstof attachment.contact.last_name %}&quot;
+                                </div>
+                                <div class="message__attachment-contact-phone">
+                                    Телефон: <a class="message__attachment-contact-link text-dark" href="tel:{{ attachment.contact.phone_number }}">
+                                                {{ attachment.contact.phone_number }}
+                                            </a>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="message__attachment-unsupported">Неподдерживаемое вложение</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="message__text">
+                        {{ message.text|linebreaksbr }}
+                    </div>
+                </div>
+                <div class="message__service-data d-flex flex-row justify-content-between text-secondary small">
+                    <div class="message__sender me-2">
+                        {% comment %}
+                        <!-- @TODO: create staff model with avatar param -->
+                        {% endcomment %}
+                        {% if message.client %}
+                            <a href="/users/{{ message.client.id }}" class="text-reset text-decoration-none">
+                                {% if message.client.first_name %}
+                                    {{ message.client.first_name }}&nbsp;{% firstof message.client.last_name %}
+                                {% elif message.client.username %}
+                                    {{ message.client.username }}
+                                {% else %}
+                                    {{ message.client.source }} {{ message.client.uid }}
+                                {% endif %}
+                            </a>
+                        {% else %}
+                            <a href="/staff/{{ message.staff.id }}" class="text-reset text-decoration-none">
+                                @{{ message.staff.username }}
+                            </a>
+                        {% endif %}
+
+                    </div>
+                    <div class="message__date text-end me-2">
+                        {{ message.time }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>

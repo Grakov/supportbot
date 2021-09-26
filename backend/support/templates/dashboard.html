@@ -1,0 +1,51 @@
+{% extends "components/base.html" %}
+
+{% block head_css %}
+    {{ block.super }}
+{% endblock %}
+
+{% block head_js %}
+    {{ block.super }}
+{% endblock %}
+
+{% block content %}
+        <div class="container">
+            <div class="row justify-content-center m-4">
+                <!-- Support card -->
+                <div class="col mx-2">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex flex-row mt-2">
+                                <span class="material-icons-round">support_agent</span>
+                                <h5 class="card-title ms-2">Поддержка</h5>
+                            </div>
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            <a class="list-group-item list-group-item-action " href="/chat/">Чаты</a>
+                            <a class="list-group-item list-group-item-action " href="/queue/">Очередь</a>
+                            <a class="list-group-item list-group-item-action " href="/users/">Пользователи</a>
+                        </ul>
+                    </div>
+                </div>
+
+                {% if staff_user.meta.is_admin %}
+                <!-- Admin card -->
+                <div class="col mx-2">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex flex-row mt-2">
+                                <span class="material-icons-round">settings</span>
+                                <h5 class="card-title ms-2">Администрирование</h5>
+                            </div>
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            <a class="list-group-item list-group-item-action " href="/settings/">Настройки</a>
+                            <a class="list-group-item list-group-item-action " href="/staff/">Сотрудники</a>
+                            <a class="list-group-item list-group-item-action " href="/lines/">Линии поддержки</a>
+                        </ul>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+{% endblock %}

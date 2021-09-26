@@ -1,0 +1,53 @@
+        <header class="border-bottom">
+            <nav class="navbar navbar-light navbar-expand-lg">
+                <div class="container-fluid">
+                    <a class="navbar-brand" href="/">
+                        Support
+                    </a>
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+                        <div class="navbar-nav align-items-center d-flex flex-row justify-content-between flex-wrap w-100">
+                            <div class="d-flex flex-row flex-wrap">
+                                <a class="nav-link ms-2" href="/chat/">
+                                    Чаты <span class="chats-counter badge bg-danger d-none"></span>
+                                </a>
+                                <a class="nav-link ms-2" href="/queue/">
+                                    Очередь <span class="queue-counter badge bg-secondary">
+                                        {{ staff_user.meta.line.get_opened_chats_count }}
+                                    </span>
+                                </a>
+                                <a class="nav-link ms-2" href="/users/">Пользователи</a>
+                                {% if staff_user.meta.is_admin %}
+                                <a class="nav-link ms-2" href="/settings/">Настройки</a>
+                                <a class="nav-link ms-2" href="/staff/">Сотрудники</a>
+                                <a class="nav-link ms-2" href="/lines/">Линии поддержки</a>
+                                {% endif %}
+                            </div>
+                            <!-- @TODO add on click? -->
+                            <div class="staff-header selectable nav-item dropdown p-0 m-0">
+                                <div class="staff-header__dropdown nav-link dropdown-toggle p-0 m-0" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <div class="staff-header__container d-flex flex-row mx-3">
+                                        <div class="staff-header__media d-flex align-items-center">
+                                            <img class="staff-header__media-avatar" src="{{ staff_user.meta.avatar.generate_file_url }}"/>
+                                        </div>
+                                        <div class="staff-header__info d-flex flex-column ms-2">
+                                            <div class="staff-header__name">
+                                                {% firstof staff_user.first_name %} {% firstof staff_user.last_name %}
+                                            </div>
+                                            <div class="staff-header__username text-secondary small">
+                                                @{{ staff_user.username }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                                    <li><a class="dropdown-item" href="/logout/">Выйти</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </header>

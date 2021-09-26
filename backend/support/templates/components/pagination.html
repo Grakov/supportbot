@@ -1,0 +1,33 @@
+<div class="card-body">
+    <ul class="pagination justify-content-center">
+        <li class="page-item">
+            <a class="page-link" href="{{ pagination.base_url }}1" tabindex="-1">В начало</a>
+        </li>
+        {% if pagination.page == 1 %}
+        <li class="page-item disabled">
+            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Назад</a>
+        </li>
+        {% else %}
+        <li class="page-item">
+            <a class="page-link" href="{{ pagination.base_url }}{{ pagination.page|add:'-1' }}" tabindex="-1">Назад</a>
+        </li>
+        {% endif %}
+        {% for page_num in pagination.list %}
+        <li class="page-item{% if page_num == pagination.page %} active" aria-current="page{% endif %}">
+            <a class="page-link" href="{{ pagination.base_url }}{{ page_num }}">{{ page_num }}</a>
+        </li>
+        {% endfor %}
+        {% if pagination.page == pagination.pages_count %}
+        <li class="page-item disabled">
+            <a class="page-link" href="#" aria-disabled="true">Дальше</a>
+        </li>
+        {% else %}
+        <li class="page-item">
+            <a class="page-link" href="{{ pagination.base_url }}{{ pagination.page|add:'1' }}">Дальше</a>
+        </li>
+        {% endif %}
+        <li class="page-item">
+            <a class="page-link" href="{{ pagination.base_url }}{{ pagination.pages_count }}" tabindex="-1">В конец</a>
+        </li>
+    </ul>
+</div>

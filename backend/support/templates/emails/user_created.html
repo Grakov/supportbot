@@ -1,0 +1,11 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Ваш аккаунт в системе поддержки создан{% endblock %}
+
+{% block content %}
+    <p>{{ first_name }}{% if last_name %} {{ last_name }}{% endif %}, для доступа в систему используйте следующие данные:</p>
+    <ul>
+        <li><b>Имя пользователя:</b> {{ username }}</li>
+        <li><b>Пароль:</b> {{ password }}</li>
+    </ul>
+{% endblock %}

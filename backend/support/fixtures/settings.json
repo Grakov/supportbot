@@ -1,0 +1,132 @@
+[
+    {
+        "model": "support.settings",
+        "pk": 1,
+        "fields": {
+            "key": "system.file_download_enabled",
+            "type": "bool",
+            "value": "1",
+            "description": "Whether uploading files to the server is allowed"
+        }
+    },
+    {
+        "model": "support.settings",
+        "pk": 2,
+        "fields": {
+            "key": "system.chats_limit",
+            "type": "int",
+            "value": "3",
+            "description": "Maximum count of parallel chats, what can be assigned to staff user"
+        }
+    },
+    {
+        "model": "support.settings",
+        "pk": 3,
+        "fields": {
+            "key": "system.mail.transport",
+            "type": "string",
+            "value": "sendmail",
+            "description": "Defines transport for sending mail (\"sendmail\" or \"smtp\")"
+        }
+    },
+    {
+        "model": "support.settings",
+        "pk": 4,
+        "fields": {
+            "key": "system.mail.smtp_host",
+            "type": "string",
+            "value": "",
+            "description": "SMTP host for smtp mail transport"
+        }
+    },
+    {
+        "model": "support.settings",
+        "pk": 5,
+        "fields": {
+            "key": "system.mail.smtp_port",
+            "type": "int",
+            "value": "465",
+            "description": "SMTP port for smtp mail transport"
+        }
+    },
+    {
+        "model": "support.settings",
+        "pk": 7,
+        "fields": {
+            "key": "system.mail.smtp_username",
+            "type": "string",
+            "value": "",
+            "description": "SMTP username for smtp mail transport"
+        }
+    },
+    {
+        "model": "support.settings",
+        "pk": 8,
+        "fields": {
+            "key": "system.mail.smtp_password",
+            "type": "string",
+            "value": "",
+            "description": "SMTP password for smtp mail transport"
+        }
+    },
+    {
+        "model": "support.settings",
+        "pk": 9,
+        "fields": {
+            "key": "system.mail.smtp_tls",
+            "type": "bool",
+            "value": "0",
+            "description": "Whether to use TLS for smtp mail transport"
+        }
+    },
+    {
+        "model": "support.settings",
+        "pk": 10,
+        "fields": {
+            "key": "system.mail.smtp_ssl",
+            "type": "bool",
+            "value": "1",
+            "description": "Whether to use SSL for smtp mail transport"
+        }
+    },
+    {
+        "model": "support.settings",
+        "pk": 11,
+        "fields": {
+            "key": "system.mail.sendmail_binary",
+            "type": "string",
+            "value": "",
+            "description": "Path to sendmail binary. Could be empty - mail backend will try to find it"
+        }
+    },
+    {
+        "model": "support.settings",
+        "pk": 12,
+        "fields": {
+            "key": "system.mail.default_from",
+            "type": "string",
+            "value": "noreply@yourdomain.com",
+            "description": "Default email sender address. If you are using public mail service, it should be equal with system.mail.smtp_username"
+        }
+    },
+    {
+        "model": "support.settings",
+        "pk": 13,
+        "fields": {
+            "key": "system.password_length",
+            "type": "int",
+            "value": "12",
+            "description": "Password length, used for password generation"
+        }
+    },
+    {
+        "model": "support.settings",
+        "pk": 14,
+        "fields": {
+            "key": "mapbox.api_token",
+            "type": "string",
+            "value": "",
+            "description": "API Token from mapbox.com for map-picker in chats"
+        }
+    }
+]

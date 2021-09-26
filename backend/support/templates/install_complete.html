@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{{ page_title }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4"
+            crossorigin="anonymous"></script>
+    <script>
+        function home() {
+            location.href = '/';
+        }
+    </script>
+</head>
+<body>
+    <div class="container-fluid m-4">
+        <div class="row justify-content-center">
+            <div class="col-6">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="card__header d-flex flex-row align-items-center border-bottom border-gray pb-2">
+                            <span class="material-icons-round" style="font-size: 32px">tune</span>
+                            <h3 class="ms-2 mb-0">Установка</h3>
+                        </div>
+                        <div class="card__form mt-2">
+                            <form action="/install/" method="POST">
+                                <div class="form__header d-flex flex-row mb-2">
+                                    <span class="material-icons-round">done</span>
+                                    <h5 class="card-title ms-2">Пользователь создан</h5>
+                                </div>
+                                <div class="mb-3">
+                                    Для входа в аккаунт используйте следующие данные:
+                                </div>
+                                <ul class="mb-3">
+                                    <li>Имя пользователя: {{ username }}</li>
+                                    <li>Пароль: {{ password }}</li>
+                                </ul>
+                                <div class="mb-3">
+                                    Сохраните эти данные для входа, так как в дальнейшем изменить их без доступа в панель управления можно будет только через <code>manage.py shell</code>
+                                </div>
+                                <button type="button" class="btn btn-primary" onclick="home()">Продолжить</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

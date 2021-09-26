@@ -1,0 +1,358 @@
+{% extends "components/base.html" %}
+
+{% comment %}
+Component receives chat map:
+- assigned_chats - array of maps
+--- chat - Chats model object
+--- last_message - string with last message (truncated)
+--- time - string
+--- new_messages - integer
+- current_chat - int
+- chats_limit - int
+- messages - array with Messages model objects
+{% endcomment %}
+
+{% block head_css %}
+    {{ block.super }}
+        <link href="/static/css/chat.css" rel="stylesheet">
+{% endblock %}
+
+{% block head_js %}
+    {{ block.super }}
+{% endblock %}
+
+{% block js_definitions %}
+            {% autoescape off %}
+            current_staff: {% if staff_user %}{{ staff_user.id }}{% else %}null{% endif %},
+            chats: {
+                {% for element in chat.assigned_chats %}
+                    {{ element.chat.id }}: {{ element.chat.json }},
+                {% endfor %}
+            },
+            current_chat: {% if chat.current_chat %}{{ chat.current_chat.id }}{% else %}null{% endif %},
+            scroll_message_front: {% with last_message=chat.messages|last %}{% firstof last_message.id 'null' %}{% endwith %},
+            scroll_message_back: {% with first_message=chat.messages.0 %}{% firstof first_message.id 'null' %}{% endwith %},
+            is_scroll_locked: false,
+            is_page_loaded: false,
+            is_message_loading_locked: false,
+            observers: {
+                scroll_down: null,
+                scroll_up: null,
+            },
+            mapbox_api_token: '{{ chat.mapbox_api_token }}',
+            {% endautoescape %}
+{% endblock %}
+
+{% block content %}
+        <div class="container-fluid container-chat">
+            <div class="row overflow-hidden h-100 p-0">
+                <div class="left-container d-flex flex-column justify-content-between col-2 p-0 border-end">
+                    <div class="dialogs-list list-group rounded-0 chats-list border-top-0">
+                        {% for chat_card in chat.assigned_chats %}
+                            {% include "components/left_chat_card.html" with chat_card=chat_card current_chat=chat.current_chat only %}
+                        {% endfor %}
+                    </div>
+                    <div class="info-box d-flex justify-content-center border-top">
+                        <div class="info-box__container m-3">
+                            {{ chat.assigned_chats|length }} / {{ chat.chats_limit }} Chats
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-box d-flex flex-column justify-content-between m-0 col-7 border-top-0 p-0">
+                    <div class="chat-box__controls p-3 d-flex flex-row justify-content-between{% if not chat.current_chat %} d-none{% endif %}">
+                        <div class="input-group d-flex w-auto flex-shrink-0">
+                            <button class="chat-box__control-close btn btn-outline-secondary d-flex align-items-center rounded-0
+                                           {% if chat.current_chat.status == 'closed' %}d-none{% endif %}" type="button">
+                                <span class="material-icons-round me-1">power_settings_new</span>
+                                Закрыть чат
+                            </button>
+                            <button class="chat-box__control-open btn btn-outline-secondary d-flex align-items-center rounded-0
+                                           {% if chat.current_chat.status != 'closed' %}d-none{% endif %}" type="button">
+                                <span class="material-icons-round me-1">refresh</span>
+                                Открыть чат
+                            </button>
+                            <button class="chat-box__control-unassign btn btn-outline-secondary d-flex align-items-center rounded-0
+                                           {% if chat.current_chat.assignee != staff_user %}d-none{% endif %}" type="button">
+                                <span class="material-icons-round me-1">close</span>
+                                Отказаться от чата
+                            </button>
+                            <button class="chat-box__control-assign btn btn-outline-secondary d-flex align-items-center rounded-0
+                                           {% if chat.current_chat.assignee == staff_user %}d-none{% endif %}" type="button">
+                                <span class="material-icons-round me-1">add_box</span>
+                                Взять в работу
+                            </button>
+                        </div>
+                        <div class="input-group d-flex w-auto flex-shrink-0">
+                            <select class="chat-box__control-queue form-select border-secondary w-auto flex-grow-0" aria-label="Линия поддержки">
+                                {% for line in lines.list %}
+                                    <option data-line-id="{{ line.id }}" value="{{ line.id }}"{% if line.id == chat.current_chat.line.id %} selected{% endif %}>
+                                        {{ line.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <button class="chat-box__control-forward btn btn-outline-secondary d-flex align-items-center" type="button">
+                                <span class="material-icons-round">shortcut</span>
+                                <span class="">Перевести</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chat-box__container p-3 border-top">
+                        <div class="chat-box__container-scrollable">
+                            <div class="progress chat-box__progress d-none">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated w-100" role="progressbar"
+                                     aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                            <div class="chat-box__messages">
+                            {% for message in chat.messages %}
+                                {% include "components/chat_message.html" with message=message only %}
+                            {% endfor %}
+                            </div>
+                            <div class="chat-box__container-after"></div>
+                        </div>
+                    </div>
+                    <!-- Message send form -->
+                    <div class="chat-box__form-container border-top">
+                        <div class="send-form d-flex flex-column m-3">
+                            <div class="send-form__attachments d-inline-flex flex-wrap">
+                            </div>
+                            <form class="send-form__file-upload-form">
+                                <input id="file_upload_wrapper" name="files" type="file" multiple />
+                            </form>
+                            <form class="send-form__form" id="message_form">
+                                <div class="input-group">
+                                    <textarea class="send-form__textarea form-control border-secondary border-end-0" name="message" rows="2" placeholder="Текст сообщения"></textarea>
+                                    <div class="d-flex flex-column">
+                                        <button class="send-form__upload-button btn btn-outline-secondary border-start-0 border-bottom-0 rounded-0 d-flex flex-grow-1 align-items-center"
+                                                data-target="#file_upload_wrapper" type="button">
+                                            <span class="material-icons-round">attach_file</span>
+                                            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                        </button>
+                                        <button class="send-form__location-button btn btn-outline-secondary border-start-0 border-top-0 rounded-0 d-flex flex-grow-1 align-items-center"
+                                                type="button">
+                                            <span class="material-icons-round">place</span>
+                                            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                        </button>
+                                    </div>
+                                    <button class="btn btn-outline-secondary d-flex align-items-center" type="submit">
+                                        <span class="material-icons-round">send</span>
+                                    </button>
+                                </div>
+                                <input class="send-form__attachments_input" name="attachments" type="hidden" value="" />
+                            </form>
+                        </div>
+                    </div>
+                    <!-- Message send form end -->
+                </div>
+                <div class="user-box col-3 border-top-0 border-start p-0">
+                    <div class="user-box__wrapper m-3">
+                        <div class="user-box__base-container justify-content-center d-flex flex-row pb-3 mb-3 border-bottom">
+                            <div class="user-box__base-media">
+                                <img class="user-box__base-avatar" src="{{ chat.current_chat.client.avatar.generate_file_url }}" />
+                            </div>
+                            <div class="user-box__base-info d-flex flex-column ms-3">
+                                <h5 class="user-box__base-name fw-bolder m-0">
+                                    {% if chat.current_chat.client.first_name %}
+                                        {{ chat.current_chat.client.first_name }}&nbsp;{% firstof chat.current_chat.client.last_name %}
+                                    {% else %}
+                                        <i>Пустое имя</i>
+                                    {% endif %}
+                                </h5>
+                                <div class="user-box__base-username text-secondary">
+                                    <a class="user-box__base-username-link text-reset text-decoration-none" href="https://t.me/{{ chat.current_chat.client.username }}">
+                                        {% if chat.current_chat.client.username %}
+                                            @{{ chat.current_chat.client.username }}
+                                        {% endif %}
+                                    </a>
+                                </div>
+                                <div class="user-box__base-source text-secondary">
+                                    {{ chat.current_chat.client.source|capfirst }} (ID {{ chat.current_chat.client.uid }})
+                                </div>
+                                <div class="user-box__base-blocked text-danger mt-2">
+                                    <form id="user_block">
+                                    {% if chat.current_chat.client.is_blocked %}
+                                        <button class="btn btn-outline-danger btn-sm" type="submit">Разблокировать</button>
+                                    {% else %}
+                                        <button class="btn btn-outline-danger btn-sm" type="submit">Заблокировать</button>
+                                    {% endif %}
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="user-box__detailed-container justify-content-center d-flex flex-column mb-3">
+                            <form>
+                                <div class="user-box__phone-number justify-content-sm-center row p-0">
+                                    <label for="user-phone" class="col-sm-4 col-form-label">Телефон</label>
+                                    <div class="col-sm-8">
+                                        <input type="text" readonly class="form-control-plaintext border-bottom"
+                                               id="user-phone" value="{% firstof chat.current_chat.client.phone_number %}"
+                                               placeholder="Неизвестен" />
+                                    </div>
+                                </div>
+                            </form>
+                            <div class="user-box__alter-names row mt-3 mx-auto p-0 w-100" style="width: 18rem;">
+                                <div class="card border-0">
+                                    <div class="card-header">
+                                        Известные имена
+                                    </div>
+                                    <ul class="user-box__alter-names-list list-group list-group-flush">
+                                        {% include "components/chat_known_names.html" with names_container=chat.current_chat.client.name_history.container only %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="user-box__comments-container">
+                            <div class="user-box__comments-card row mt-3 mx-auto p-0 w-100" style="width: 18rem;">
+                                <div class="card border-0">
+                                    <div class="card-header">
+                                        Комментарии
+                                    </div>
+                                    <ul class="user-box__comments list-group list-group-flush">
+                                        {% include "components/chat_comments.html" with comments=chat.current_chat.client.comments only %}
+                                    </ul>
+                                    <div class="card-footer">
+                                        <form id="comments_form">
+                                            <div class="input-group">
+                                                <textarea class="form-control" name="comment" rows="1" placeholder="Comment" required></textarea>
+                                                <button class="btn btn-outline-secondary d-flex align-items-center" type="submit">
+                                                    <span class="material-icons-round">send</span>
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="map-pickup-modal modal fade" id="mapPickModal" tabindex="-1" aria-hidden="true">
+            <div class="map-pickup-modal__popup modal-dialog modal-dialog-centered modal-dialog-scrollable ">
+                <div class="map-pickup-modal__content modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Выберите геолокацию для отправки</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="map-pickup-modal__body modal-body overflow-hidden p-0">
+                        <iframe class="map-pickup-modal__iframe" src="/static/html/map_picker.html" loading="lazy"></iframe>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="map-pickup-modal__pickup-location btn btn-secondary">Выбрать</button>
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="chat__templates d-none">
+            {% include "components/left_chat_card.html" only %}
+        </div>
+        <script>{% autoescape off %}
+        {% if chat.current_chat is not None and chat.current_chat not in chat.assigned_chats %}
+            support.vars.chats[{{ chat.current_chat.id }}] = {{ chat.current_chat.json }};
+        {% endif %}
+        {% if chat.current_chat %}
+            support.chat.bindForms();
+        {% else %}
+            $('.user-box__wrapper').hide();
+            $('.send-form').hide();
+        {% endif %}
+
+        $('.chat-box__control-forward').on('click', (event) => {
+            line_id = $('.chat-box__control-queue').val();
+            support.chat.setLine(line_id);
+        });
+
+        support.chat.repaintDialogs();
+        support.chat.bindDialogsList();
+
+        $('.send-form__upload-button').on('click', support.files.uploadWrapper);
+        $('#message_form').on('reset', (event) => {
+            support.chat.removeAllAttachments();
+        });
+        $('#file_upload_wrapper').on('change', (event) => {
+            support.files.upload({
+                input: event.target,
+                loading: support.chat.attachmentsLoading,
+                callback: (files) => {
+                    support.chat.attachmentsCallback('files', files);
+                },
+            });
+        });
+        $('.send-form__textarea').on("input", function () {
+            addon = 2;
+            defaultHeight = $(this).data('default-height');
+
+            if (defaultHeight === undefined) {
+                defaultHeight = this.scrollHeight;
+                $(this).data('default-height', defaultHeight)
+            } else {
+                defaultHeight = parseInt(defaultHeight)
+            }
+
+            if (defaultHeight < this.scrollHeight && (defaultHeight + addon) * 2 > this.scrollHeight) {
+                this.style.height = "auto";
+                this.style.height = (this.scrollHeight + addon) + "px";
+            }
+        });
+        $('.send-form__location-button').on('click', (event) => {
+            // By specifications indexOf uses Strict Equality Comparison
+            if ([null, undefined, ''].indexOf(support.vars.mapbox_api_token) != -1) {
+                support.makeErrorToast({
+                    text: 'Не указан MapBox API Token',
+                    small_text: 'Воспользуйтесь <a href="https://github.com/Grakov/supportbot/#location-picker-support" target="_blank">этой инструкцией</a> для решения проблемы',
+                });
+            } else {
+                support.storage.set('mapbox_api_token', support.vars.mapbox_api_token);
+                $('.map-pickup-modal').modal('show');
+            }
+        });
+        $('.map-pickup-modal__pickup-location').on('click', (event) => {
+            $('.map-pickup-modal').modal('hide');
+            support.chat.pickupLocationAttachment();
+        });
+
+        $('.chat-box__control-assign').on('click', (event) => {support.chat.assign();});
+        $('.chat-box__control-unassign').on('click', (event) => {support.chat.unassign();});
+        $('.chat-box__control-open').on('click', (event) => {support.chat.openChat();});
+        $('.chat-box__control-close').on('click', (event) => {support.chat.closeChat();});
+
+        chatbox_messages = $('.chat-box__messages');
+        chatbox_messages_container = $('.chat-box__container');
+
+        $( window ).on('load', (event) => {
+            support.vars.is_page_loaded = true;
+        });
+
+        chatbox_messages_container.on('scroll', (event) => {
+            if (chatbox_messages_container.scrollTop() < 10) {
+                support.chat.loadPreviousMessages();
+            }
+
+            if (chatbox_messages_container[0].scrollHeight - chatbox_messages_container.scrollTop() <=
+                chatbox_messages_container[0].clientHeight + 50) {
+                    support.chat.markRead(support.vars.current_chat);
+            }
+
+            if (support.vars.is_page_loaded) {
+                support.chat.stopScroll();
+            }
+            support.chat.freePosition();
+        });
+
+        support.chat.scrollDown();
+
+        window.addEventListener('popstate', (event) => {
+            chat_id = null;
+            client_id = null;
+            if (event.state !== null) {
+                chat_id = event.state.chat_id;
+                client_id = event.state.chat_id;
+            }
+
+            // probably should be changed to repaint (for preventing history deletion)
+            support.chat.select(chat_id, client_id);
+        });
+
+        support.chat.pushState(support.vars.current_chat, support.vars.current_client);
+        {% endautoescape %}</script>
+{% endblock %}

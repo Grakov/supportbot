@@ -1,0 +1,102 @@
+version: "3"
+
+volumes:
+  supportbot_file_storage:
+  supportbot_mysql_storage:
+  supportbot_rabbitmq:
+
+services:
+  bot:
+    build: bot/
+    container_name: supportbot_bot
+    hostname: supportbot_bot
+    restart: unless-stopped
+    depends_on:
+      - mysql
+      - rabbitmq
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        window: 60s
+    user: "supportbot"
+    working_dir: "/home/supportbot/supportbot"
+    volumes:
+      - supportbot_file_storage:/var/www/supportbot
+    entrypoint: [ "./docker-entrypoint.sh" ]
+    environment:
+      - TZ=Europe/Moscow
+      - BOT_TOKEN=BOT_TOKEN
+      - MYSQL_HOST=supportbot_mysql
+      - MYSQL_PORT=3306
+      - MYSQL_DBNAME=support_bot
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=password
+      - RABBITMQ_HOST=supportbot_rabbitmq
+      - RABBITMQ_PORT=5672
+      - BACKEND_HOST=supportbot_backend
+      - BACKEND_POST=80
+      - DEBUG=False
+
+  backend:
+    build: backend/
+    container_name: supportbot_backend
+    hostname: supportbot_backend
+    restart: unless-stopped
+    depends_on:
+      - mysql
+      - rabbitmq
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        window: 60s
+    ports:
+      - "127.0.0.1:80:80"
+    user: "root"
+    volumes:
+      - supportbot_file_storage:/var/www/supportbot
+    entrypoint: [ "./docker-entrypoint.sh" ]
+    environment:
+      - TZ=Europe/Moscow
+      - SECRET_KEY=""
+      - MYSQL_HOST=supportbot_mysql
+      - MYSQL_PORT=3306
+      - MYSQL_DBNAME=support_bot
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=password
+      - RABBITMQ_HOST=supportbot_rabbitmq
+      - RABBITMQ_PORT=5672
+      - DEBUG=False
+
+  mysql:
+    build: mysql/
+    container_name: supportbot_mysql
+    hostname: supportbot_mysql
+    restart: unless-stopped
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        window: 120s
+    command: --default-authentication-plugin=mysql_native_password
+    volumes:
+      - supportbot_mysql_storage:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - TZ=Europe/Moscow
+
+  rabbitmq:
+    image: rabbitmq:3
+    container_name: supportbot_rabbitmq
+    hostname: supportbot_rabbitmq
+    restart: unless-stopped
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        window: 120s
+    volumes:
+      - supportbot_rabbitmq:/var/lib/rabbitmq
+    environment:
+      - TZ=Europe/Moscow

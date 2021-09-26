@@ -1,0 +1,100 @@
+:root {
+    --support-sea-blue: #048f7a;
+    --support-danger: #990606;
+    --support-warning: #d47a0d;
+}
+html, body {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    margin: 0;
+    min-height: 720px;
+}
+
+button span {
+    pointer-events: none;
+}
+
+.toast-container {
+    z-index: 2000 !important;
+}
+.toast-error {
+    background-color: #ffdbdb;
+}
+.toast-success {
+    background-color: #d4ffb5; /*#b5ffb5*/
+}
+.toast-notify {
+    background-color: #ccedfc;
+}
+
+.selectable {
+    cursor: pointer;
+}
+.staff-header__dropdown::after {
+    display: none !important;
+}
+.staff-header__media-avatar {
+    width: 40px;
+    height: 40px;
+}
+
+.users-container {
+    min-width: 420px;
+}
+
+.queue-entity__message {
+    width: intrinsic;           /* Safari/WebKit uses a non-standard name */
+    width: -moz-max-content;    /* Firefox/Gecko */
+    width: -webkit-max-content; /* Chrome */
+    width: max-content;
+}
+
+.user-entity__avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+}
+.queue-entity__avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+}
+.queue-entity__button {
+    padding: .25rem !important;
+}
+.queue-entity__button span {
+    font-size: .875rem !important;
+}
+
+.setting-entity__checkbox {
+    width: 24px;
+}
+
+.lines-entity__badge {
+    font-size: 1.25rem !important;
+}
+
+.login-form {
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+}
+
+.text-inherit-font-size {
+    font-size: inherit;
+}
+
+.timer-ok {
+    color: var(--support-sea-blue);
+}
+.timer-warning {
+    color: var(--support-warning);
+}
+.timer-problem {
+    color: var(--support-danger);
+}
+
+.pointer {
+    cursor: pointer;
+}
